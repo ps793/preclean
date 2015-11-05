@@ -1,4 +1,4 @@
-function [DateMdyyyy,TimeHHmmss,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Import(directory,filename)
+function [DateMdyyyy,TimeHHmmss,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Import(directory)
 %IMPORTFILE Import numeric data from a text file as column vectors.
 %   [DATEMDYYYY,TIMEHHMMSS1,LATERALACC1,LONGITUDINALACC1,VERTICALACC1] =
 %   IMPORTFILE(FILENAME) Reads data from text file FILENAME for the default
@@ -59,8 +59,8 @@ function [DateMdyyyy,TimeHHmmss,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Im
 
 %filename='AccMG1005 12-12-14a';
 %%%%%read csv file from other routine
-full_filename=fullfile(directory,filename);
-dataArray=readtable(full_filename);
+
+dataArray=readtable(directory);
 
 
 %% Allocate imported array to column variable names

@@ -1,32 +1,14 @@
-function [featureformat] = precleanfile(directory,Accelerometer,Indications,Summary)
-%cd ('/Users/lukeguerdan/Desktop/Data Cleaning/Preclean');
-
-%Accelerometer = 'AccMG#1005 12-11-14a';
-%directory='C:\Users\pp\Desktop\1005 raw';
-open=dir(directory);
+function [featureformat] = precleanfile(Accelerometer,Indications,Summary)
 
 
-%load acc_file--4 in the list
-acc_directory=fullfile(directory,open(4).name);
 %load in Accelerometer data files
-[DateMdyyyy,TimeHHmmss000,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Import(acc_directory,Accelerometer);
+[DateMdyyyy,TimeHHmmss000,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Import(Accelerometer);
 
-
-%Indications = 'Indications#1005 12-11-14a';
 %load in Indication data files
-ind_directory=fullfile(directory,open(5).name);
-ind1 = import_indications(ind_directory,Indications);
+ind1 = import_indications(Indications);
 
-
-
-%Summary = 'NewSummary#1005 12-11-14a';
-%load in Summary data files
-sum_directory=fullfile(directory,open(3).name);
-summ1 = import_summary(sum_directory,Summary);
-%'NewSummary1005 12-12-14a.csv'
-
-size(summ1)
-
+%Load in Summary data files
+summ1 = import_summary(Summary);
 
 
 %%Averge and format raw accelerometer file by calling ACC allign acc1 file by calling 
@@ -47,7 +29,7 @@ for i = 1:length(accseconds)
         break
     end
 end
-rangemin = accindex; 
+rangemin = accindex ; 
 rangemax = accindex + 5;
 
 
@@ -74,9 +56,12 @@ for i = 1:formatlength
     else
         
         for j = 1:3
-            fivesecavg(i,j) = mean(seconds((rangemin:rangemax),j));
-        end;
-        
+            try
+                fivesecavg(i,j) = mean(seconds((rangemin:rangemax),j));
+            catch
+                fivesecavg(i,j) = mean(seconds((rangemin:end),j));
+            end
+        end
         rangemin = accindex - 4;
         rangemax = accindex;
         accindex = accindex + 5;
@@ -86,7 +71,6 @@ end
 ACCformated = table(accfiveseconds,fivesecavg,'VariableNames',{'TimeHHmmss000','Accraw'});
 
 V = table2array(ACCformated(:,2));
-disp('accformat complete')
 
 %Create activity feature based on magnatude of accelerometer files
 x = V(:,1);
@@ -95,11 +79,7 @@ z = V(:,3);
 magnitude = @(x,y,z) sqrt(x.^2 + y.^2 + z.^2);
 activity = magnitude(x,y,z);
 
-size(activity)
-
-
 %Create table with formatted feutures
-
 featureformat = table(ACCformated{:,1}, summ1{:,5},summ1{:,6},summ1{:,7}, ind1{:,3}, ind1{:,4},ind1{:,5}, ind1{:,6}, summ1{:,2},V(:,1),V(:,2),V(:,3),summ1{:,1}, summ1{:,3}, summ1{:,4},activity ,'VariableNames',{'Time__HH_mm_ss_' 'Skin_Temperature__IR_Thermometer' 'Body_Position' 'Ambulation_Status' 'Low_HR_Confidence' 'HR_Confidence' 'Low_BR_Confidence' 'BR_Confidence' 'time' 'Lateral_Acc' 'Longitudinal_Acc' 'Vertical_Acc' 'date' 'HR' 'BR' 'activity'});
 
 %Filter out HR data with low confidence

@@ -1,7 +1,7 @@
-function summ = import_summary(directory,filename)
+function summ = import_summary(directory)
 
-full_filename=fullfile(directory,filename);
-dataArray=readtable(full_filename);
+
+dataArray=readtable(directory);
 
 %% Create output variable
 %summ = table(dataArray{1:end-1}, 'VariableNames', {'DateMdyyyy','TimeHHmmss','HRbpm','BRrpm','SkinTemperatureIRThermometer','BodyPosition','AmbulationStatus'});

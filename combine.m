@@ -1,5 +1,5 @@
 %%%%%%accmg
-acc=subdir('C:\Users\pp\Desktop\1005 raw\accMg\*cc*.csv');
+acc=subdir('C:\Users\lukeguerdan\Desktop\1005 raw\*cc*-*.csv');
 for i=3:size(acc,1)
     accfile(i-2,1)=cellstr(acc(i).name(1:end-5));
 end;

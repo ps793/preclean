@@ -1,9 +1,8 @@
-function ind = import_indications(directory,filename)
+function ind = import_indications(directory)
 
 %directory=ind_directory;
 %filename='Indications1005 12-12-14a.csv';
-full_filename=fullfile(directory,filename);
-dataArray=readtable(full_filename);
+dataArray=readtable(directory);
 
 %% Post processing for unimportable data.
 % No unimportable data rules were applied during the import, so no post

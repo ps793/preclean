@@ -2,28 +2,25 @@
 %%vertically
 
     
-A = precleanfile('C:\Users\pp\Desktop\1005 raw','AccMG#1005 12-11-14a.csv','Indications#1005 12-11-14a.csv','NewSummary#1005 12-11-14a.csv');
-B = precleanfile('C:\Users\pp\Desktop\1005 raw','AccMG#1005 12-12-14b.csv','Indications#1005 12-12-14b.csv','NewSummary#1005 12-12-14b.csv');
-
-C = vertcat(A,B);
-
-figure
-plot(C{:,16})
-title('Activity')
-axis([0 12000 600 1000])
-
-figure
-plot(C{:,10:12})
-title('Accelerometers')
-axis([0 12000 -2000 2000])
+A = precleanfile(acc(2).name,Ind(1).name,Sum(1).name);
+B = precleanfile(acc(3).name,Ind(2).name,Sum(2).name);
+C = precleanfile(acc(4).name,Ind(3).name,Sum(3).name);
+D = precleanfile(acc(5).name,Ind(4).name,Sum(4).name);
 
 
-figure
-plot(Test{:,11:13})
-title('Test Accelerometer')
-axis([0 12000 -2000 2000])
 
-figure
-plot(Test{:,17})
-title('Test Activity')
-axis([0 12000 600 1000])
+
+A = precleanfile(acc(4).name,Ind(4).name,Sum(4).name);
+B = precleanfile(acc(4).name,Ind(4).name,Sum(4).name);
+Preclean40315 = vertcat(A,B);
+
+
+Preclean40515 = precleanfile(acc(6).name,Ind(7).name,Sum(7).name);
+
+
+Preclean40115_test = importpreclean(pre(3).name);
+
+acc =subdir('*AccMG*-*.csv');
+ind = subdir('*ind*.csv');
+sum = subdir('*um*.csv');
+pre = subdir('*clean*.csv');
