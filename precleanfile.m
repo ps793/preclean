@@ -68,6 +68,7 @@ for i = 1:formatlength
     end
 end
 
+fivesecavg = circshift(fivesecavg,-1,1);
 ACCformated = table(accfiveseconds,fivesecavg,'VariableNames',{'TimeHHmmss000','Accraw'});
 
 V = table2array(ACCformated(:,2));
