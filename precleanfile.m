@@ -2,7 +2,7 @@ function [featureformat] = precleanfile(Accelerometer,Indications,Summary)
 
 
 %load in Accelerometer data files
-[DateMdyyyy,TimeHHmmss000,LateralAcc,LongitudinalAcc,VerticalAcc] = Acc_Import(Accelerometer);
+[DateMdyyyy,TimeHHmmss000,LateralAcc,LongitudinalAcc,VerticalAcc] = import_acc(Accelerometer);
 
 %load in Indication data files
 ind1 = import_indications(Indications);
