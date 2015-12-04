@@ -3,6 +3,11 @@ function [accseconds,seconds] = Accallign(TimeHHmmss000,LateralAcc, Longitudinal
 % List unique values of time in accelerometer file and store vector of
 % indexes these occur at
 
+string = char(TimeHHmmss000);
+string_short = string(:,1:8);
+TimeHHmmss000 = cellstr(string_short);
+
+
 [accseconds,ia] = unique(TimeHHmmss000);
 a = zeros(length(accseconds),1);
 b = zeros(length(accseconds),1);
