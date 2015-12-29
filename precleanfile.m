@@ -1,4 +1,4 @@
-function [featureformat] = precleanfile(Accelerometer,Indications,Summary)
+function [featureformat] = precleanfile1008(Accelerometer,Indications,Summary)
 %%Primary formatting function. Take directory of raw accelerometer file,
 %%Indications file and Summary file as an argument. Return n * 16 table 0f
 %%formatted data.
@@ -10,12 +10,14 @@ function [featureformat] = precleanfile(Accelerometer,Indications,Summary)
 [DateMdyyyy,TimeHHmmss000,LateralAcc,LongitudinalAcc,VerticalAcc] = import_acc(Accelerometer);
 
 
+
 %load in Indication data files as a table
 ind1 = import_indications(Indications);
 
 
 %Load in Summary data files
 summ1 = import_summary(Summary);
+
 
 
 %% Prepare data for formatting.
@@ -26,27 +28,48 @@ summ1 = import_summary(Summary);
 
 %Use summary file time stamp as a basis for constructing the formatted
 %file. Pre-allocate memory space and designate the length of the formatted
-%array.
+%array. Use a comparison opperation to determine whether files are equil
+%length. If not, format the output file according to the shortest file.
 
-accfiveseconds = summ1{:,2};
+if length(ind1{:,1}) < length(summ1{:,1})
+    
+    accfiveseconds = ind1{:,2};
+    cut = height(ind1) + 1;
+    summ1(cut:end,:) = [];
+
+elseif length(ind1{:,1}) > length(summ1{:,1})
+    
+    accfiveseconds = summ1{:,2};
+    cut = height(summ1) + 1;
+    ind1(cut:end,:) = [];
+else
+    accfiveseconds = summ1{:,2};
+end
+
+
 formatlength = length(accfiveseconds);
 fivesecavg = zeros(formatlength,3);
 
+
 %Convert time signatures of seconds and five seconds to character arrays
 %of equal length. This will allow for use of string comparison opperation to match up when the times allign.
-A = char(accseconds);
-B = A(:,1:8);
-C = char(accfiveseconds);
+
+A = datenum(accseconds);
+B = datenum(accfiveseconds);
 
 %Find the positon when the accelerometer time and other file times first
-%allign. Set the starting index for averging at this initial location when string compare first evaluates to true. 
+%allign. Set the starting index for averging at this initial location when string compare first evaluates to true.
+
+accindex = 10;
 for i = 1:length(accseconds)
-    
-   if strcmp(B(i,(1:end)),C(1,(1:end)));
+    if A(i) == B(1);
         accindex = i;
         break
     end
 end
+
+
+
 
 %% Averaging accelerometer data.
 %Because the sampling frequency of accelerometer data is still higher than
@@ -56,36 +79,35 @@ end
 %through the length of the accelerometer file and store the results in fivesecavg.
 
 %Establish beggening/end of moving frame.
-rangemin = accindex ;
+rangemin = accindex;
 rangemax = accindex + 5;
 
 
 for i = 1:formatlength
- 
-    if strcmp(B(accindex,(1:end)),C(i,(1:end))) == 0
+
+    if A(accindex) ~= B(i)
     %This catches gaps in the accelerometer data. If a gap goes undetected,
     %this is an issue because it means the remainder of the day will have
-    %data that is not properly aligned, and can not be analyzed.   
-        newrangemin = rangemax;
-        newrangemax = newrangemin;
+    %data that is not properly aligned, and can not be analyzed.
+    newrangemin = rangemax;
+    newrangemax = newrangemin;
         for p = 1:10
-        %Scan the next 10 second values, if there is a gap in the timeseries data, 
-        %use this index to split the time frame at this location.  
+            %Scan the next 10 second values, if there is a gap in the timeseries data,
+            %use this index to split the time frame at this location.
             if datenum(accseconds(newrangemax + 1)) - datenum(accseconds(newrangemax)) > 1.1574e-05
                 for j = 1:3
                     fivesecavg(i,j) = mean(seconds((newrangemin:newrangemax),j));
                 end;
-                accindex = accindex + p;
-                break
-            
+            accindex = accindex + p;
+            break
+
             else
                 newrangemax = newrangemax + 1;
             end
         end
-        
     else
-    %Otherwise, continue as expected with averaging the files over each time frame. 
-    %Increment the frame by 5 each iteration.  
+%Otherwise, continue as expected with averaging the files over each time frame.
+%Increment the frame by 5 each iteration.
         for j = 1:3
             try
                 fivesecavg(i,j) = mean(seconds((rangemin:rangemax),j));
@@ -97,8 +119,10 @@ for i = 1:formatlength
         rangemax = accindex;
         accindex = accindex + 5;
     end
+    if accindex > length(accseconds)
+    break
+    end
 end
-
 % Shift the averages for the day five seconds back to match the averaging
 % algorithm for the previous data. Combine the N * 3 matrix and
 % corresponding time values into the ACCformated table.
@@ -117,44 +141,67 @@ magnitude = @(x,y,z) sqrt(x.^2 + y.^2 + z.^2);
 activity = magnitude(x,y,z);
 
 %Create table with formatted feutures. The result will be a N * 16 table.
-featureformat = table(ACCformated{:,1}, summ1{:,5},summ1{:,6},summ1{:,7}, ind1{:,3}, ind1{:,4},ind1{:,5}, ind1{:,6}, summ1{:,2},V(:,1),V(:,2),V(:,3),summ1{:,1}, summ1{:,3}, summ1{:,4},activity ,'VariableNames',{'Time__HH_mm_ss_' 'Skin_Temperature__IR_Thermometer' 'Body_Position' 'Ambulation_Status' 'Low_HR_Confidence' 'HR_Confidence' 'Low_BR_Confidence' 'BR_Confidence' 'time' 'Lateral_Acc' 'Longitudinal_Acc' 'Vertical_Acc' 'date' 'HR' 'BR' 'activity'});
+featureformat = table(ACCformated{:,1}, summ1{:,5},summ1{:,6},summ1{:,7}, ind1{:,3}, ind1{:,4},ind1{:,5}, ind1{:,6}, summ1{:,2},V(:,1),V(:,2),V(:,3),summ1{1:formatlength,1}, summ1{:,3}, summ1{:,4},activity ,'VariableNames',{'Time__HH_mm_ss_' 'Skin_Temperature__IR_Thermometer' 'Body_Position' 'Ambulation_Status' 'Low_HR_Confidence' 'HR_Confidence' 'Low_BR_Confidence' 'BR_Confidence' 'time' 'Lateral_Acc' 'Longitudinal_Acc' 'Vertical_Acc' 'date' 'HR' 'BR' 'activity'});
 
 
 %% Filter outlier data.
-%Filter out HR data with low confidence
-lowHR = find(featureformat{:,6} <70);
-for i = lowHR
+try
+    %Filter out HR data with low confidence
+    lowHR = find(featureformat{:,6} <70);
+    for i = lowHR
     featureformat{i,14} = 0;
-end;
+    end;
+catch
+    disp('Formatting error expected via import functions (Low HR)')
+end
 
-%Filter out BR data with low confidence
-lowBR = find(featureformat{:,8} <70);
-for i = lowBR
+try
+    %Filter out BR data with low confidence
+    lowBR = find(featureformat{:,8} <70);
+    for i = lowBR
     featureformat{i,15} = 0;
-end;
+    end;
+catch
+    disp('Formatting error expected via import functions (Low BR)')
+end
 
-%Filter outler HR data 
-HR = find(featureformat{:,14} <40);
-for i = HR
+try
+    %Filter outler HR data
+    HR = find(featureformat{:,14} <40);
+    for i = HR
     featureformat{i,14} = 0;
-end;
+    end;
+catch
+    disp('Formatting error expected via import functions  (HR)')
+end
 
-HR2 = find(featureformat{:,14} >200);
-for i = HR2
+try
+    HR2 = find(featureformat{:,14} >200);
+    for i = HR2
     featureformat{i,14} = 0;
-end;
+    end;
+catch
+    disp('Formatting error expected via import functions (Low HR)')
+end
 
-%Filter outlier BR data
-BR = find(featureformat{:,15} < 1);
-for i = BR
+try
+    %Filter outlier BR data
+    BR = find(featureformat{:,15} < 1);
+    for i = BR
     featureformat{i,15} = 0;
-end;
+    end;
+catch
+    disp('Formatting error expected via import functions (BR)')
+end
 
-%Filter outlier activity data
-ACT = find(featureformat{:,16} > 1500);
-for i = ACT
+try
+    %Filter outlier activity data
+    ACT = find(featureformat{:,16} > 1500);
+    for i = ACT
     featureformat{i,16} = 0;
-end;
-
+    end;
+catch
+    disp('Formatting error expected via import functions (Act)')
+end
 
 
